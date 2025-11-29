@@ -1,17 +1,17 @@
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: career-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: white-carrot
 
   backend:
-    build: ./career-page-builder-be
-    container_name: career-be
+    build: ../career-page-builder-be
     env_file:
-      - ./career-page-builder-be/.env
+      - ../career-page-builder-be/.env
+    environment:
+      NODE_ENV: production
     depends_on:
       - postgres
     ports:
@@ -19,8 +19,7 @@ services:
     command: npm run dev
 
   frontend:
-    build: ./career-page-builder-fe
-    container_name: career-fe
+    build: ../career-page-builder-fe
     depends_on:
       - backend
     ports:
