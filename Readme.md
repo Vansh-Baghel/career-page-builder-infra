@@ -165,6 +165,76 @@ career-page-builder-be/
 - Can add full-text search on title/department/location using PostgreSQL text indexes or ElasticSearch.
 - And sure there can be many more 😄
 
+# Instructions to import the sample data
+- We will first create a new temporary table, add the CSV data via import, clean the data fields according to our backend values, then post it in our jobs table. 
+- This create a layer of safety into our primary table.
+
+```SQL
+CREATE TABLE jobs_import (
+  title TEXT,
+  work_policy TEXT,
+  location TEXT,
+  department TEXT,
+  employment_type TEXT,
+  experience_level TEXT,
+  job_type TEXT,
+  salary_range TEXT,
+  job_slug TEXT,
+  posted_days_ago text
+);
+
+-- import CSV in the above, then clean the data, 
+
+UPDATE jobs_import
+SET work_policy = 'onsite'
+WHERE LOWER(work_policy) IN ('on-site');
+
+UPDATE jobs_import
+SET employment_type = REPLACE(LOWER(employment_type), ' ', '-');
+
+UPDATE jobs_import
+SET employment_type = 'full-time'
+WHERE LOWER(employment_type) IN ('full time');
+
+UPDATE jobs_import
+SET employment_type = 'part-time'
+WHERE LOWER(employment_type) IN ('part time');
+
+UPDATE jobs_import
+SET experience_level = 'mid'
+WHERE LOWER(experience_level) IN ('mid-level');
+
+UPDATE jobs_import
+SET job_type = LOWER(job_type);
+
+-- After this, copy the values into our jobs table by insert, please note that I have given the company_id of an existing company in my DB. Please copy id of a company which got created on your login from your database.
+
+INSERT INTO jobs (title, job_slug, posted_days_ago, job_type, department, experience_level, location, salary, employment_type, work_policy, company_id)
+SELECT
+  title,
+  job_slug,
+  posted_days_ago,
+  job_type,
+  department,
+  experience_level,
+  location,
+  salary_range,
+  employment_type,
+  work_policy,
+  '1beaf289-8e64-4404-a7c9-335e8c549576'
+FROM jobs_import;
+
+-- To verify, you can run
+SELECT DISTINCT work_policy FROM jobs_import;
+SELECT DISTINCT employment_type FROM jobs_import;
+SELECT DISTINCT experience_level FROM jobs_import;
+SELECT DISTINCT job_type FROM jobs_import;
+
+-- Drop the temporary table (optional)
+DROP TABLE jobs_import
+
+```
+
 ## 📝 Notes
 
 - All three repositories should be cloned into the same parent directory for Docker setup to work correctly.
